@@ -32,7 +32,7 @@
 <body>
 
 <h1>Level Marker (Delta-Outlier)</h1>
-<p class="sub">Stufe 2 — markiert Bars mit außergewöhnlich hohem Delta und projiziert den Level. Rein informativ, kein Entry-Signal.</p>
+<p class="sub">Stufe 2 — markiert Levels of Interest und projiziert sie nach rechts. Zwei zuschaltbare Detektoren: <strong>Delta-Outlier</strong> und <strong>Zero Prints</strong>. Rein informativ, kein Entry-Signal.</p>
 
 <h2>Was der Indikator macht</h2>
 <p>
@@ -44,6 +44,11 @@ Wenn ja, zeichnet er an diesem Bar eine waagerechte Linie und projiziert sie nac
   <li><span class="up">Grün</span> = Kauf-Outlier (positives Delta — aggressive Käufer mit Marktorders)</li>
   <li><span class="down">Rot</span> = Verkauf-Outlier (negatives Delta — aggressive Verkäufer mit Marktorders)</li>
 </ul>
+<div class="note">
+Der Indikator hat <strong>zwei zuschaltbare Detektoren</strong>: <strong>Delta-Outlier</strong> (Default an, unten beschrieben)
+und <strong>Zero Prints</strong> (Default aus, eigener Abschnitt weiter unten). Volumenprofil-Zonen wie LVN/HVN gehören in den
+separaten Indikator <em>Profile Levels</em> (Zeitchart) — nicht hierher.
+</div>
 
 <h2>Wie ein Outlier erkannt wird</h2>
 <p>
@@ -96,6 +101,22 @@ wenn der Preis zurückkommt." Ob es dann hält oder bricht, entscheidest du am <
 (Absorption? Rebid?). Der Indikator ersetzt diese Entscheidung bewusst nicht.
 </div>
 
+<h2>Zero Prints (zweiter Detektor)</h2>
+<p>
+Ein <strong>Zero Print</strong> ist ein Footprint-Preis, auf dem eine Seite <strong>gar nicht</strong> gehandelt hat —
+z.B. 63 Kontrakte auf der Ask-Seite, aber <code>0</code> auf der Bid-Seite. Dieser Preis hat einer Marktseite keine faire
+Handelsmöglichkeit gegeben; der Markt kehrt mit hoher Wahrscheinlichkeit dorthin zurück.
+</p>
+<ul>
+  <li><strong>Zielzone, nicht Entry:</strong> zeigt der Markt oben Schwäche, ist ein Zero Print darunter ein wahrscheinliches Ziel (Magnet).</li>
+  <li><strong>Verschwindet bei Berührung:</strong> sobald der Preis einen Zero Print wieder durchläuft, ist er „gefüllt" und ungültig — er wird automatisch entfernt. Stehen bleiben nur die <em>unberührten</em> Zero Prints.</li>
+  <li>Farbe Amber, Label <code>ZP</code>. Benachbarte Zero-Print-Ticks werden zu einer Zone zusammengefasst.</li>
+</ul>
+<div class="note">
+Der Filter <code>Min. Volumen (gehandelte Seite)</code> blendet belanglose 1–2-Kontrakt-Lücken aus — nur Zero Prints mit
+nennenswertem Volumen auf der gehandelten Seite zählen.
+</div>
+
 <h2>Empfohlener Chart & Timeframe</h2>
 <ul>
   <li><strong>Tick-Charts (z.B. NQ 900-Tick) sind ideal:</strong> Jeder Bar hat ~gleich viele Trades → das Delta ist von Bar zu Bar vergleichbar. Das stabilisiert den σ-Test und macht den Filter <code>Min.|Delta|</code> meist überflüssig.</li>
@@ -106,31 +127,40 @@ wenn der Preis zurückkommt." Ob es dann hält oder bricht, entscheidest du am <
 
 <h2>Einstellungen</h2>
 
-<h3>Erkennung</h3>
+<h3>Delta-Outlier</h3>
 <table>
   <tr><th>Einstellung</th><th>Bedeutung</th></tr>
+  <tr><td>Delta-Outlier aktiv</td><td>Schaltet den Delta-Outlier-Detektor ein/aus (Default an).</td></tr>
   <tr><td>Lookback (Bars)</td><td>Größe des rollierenden Vergleichsfensters. Klein = reagiert schnell, mehr Marker. Groß = träger, nur extreme Ausreißer.</td></tr>
   <tr><td>Min. Bars für Statistik</td><td>Mindestanzahl Bars, bevor gewertet wird. Verhindert Fehlalarme direkt nach Chart-Start, wenn die Statistik noch instabil ist.</td></tr>
   <tr><td>Outlier-Schwelle (Std-Abw.)</td><td>Der Faktor <code>k</code>. Hauptregler. Höher = strenger (nur die heftigsten Bars), niedriger = lockerer. Üblich 2,0–3,0.</td></tr>
   <tr><td>Min. |Delta| (0 = aus)</td><td>Absoluter Mindestbetrag zusätzlich zur Statistik. Filtert Rausch in sehr ruhigen Phasen. 0 = aus. Auf Tick-Charts meist unnötig.</td></tr>
   <tr><td>Level-Anker</td><td>Wo die Linie sitzt: <strong>vPOC</strong> (Preis mit meistem Volumen, empfohlen), <strong>Close</strong>, oder <strong>Extrem</strong> (High bei Kauf-, Low bei Verkauf-Outlier).</td></tr>
-  <tr><td>Max. Level (Anzahl)</td><td>Wie viele der jüngsten Level gleichzeitig gezeichnet werden. Ältere fallen heraus.</td></tr>
+</table>
+
+<h3>Zero Prints</h3>
+<table>
+  <tr><th>Einstellung</th><th>Bedeutung</th></tr>
+  <tr><td>Zero Prints aktiv</td><td>Schaltet den Zero-Print-Detektor ein/aus (Default aus).</td></tr>
+  <tr><td>Min. Volumen (gehandelte Seite)</td><td>Mindestvolumen auf der gehandelten Seite, damit ein Zero Print zählt. Filtert belanglose 1–2-Kontrakt-Lücken weg.</td></tr>
 </table>
 
 <h3>Darstellung</h3>
 <table>
   <tr><th>Einstellung</th><th>Bedeutung</th></tr>
-  <tr><td>Linienbreite</td><td>Dicke der Level-Linie in Pixeln.</td></tr>
-  <tr><td>Labels anzeigen</td><td>Blendet den Delta-Wert (z.B. <code>Δ +500</code>) am Level ein/aus.</td></tr>
+  <tr><td>Max. Zonen pro Typ</td><td>Wie viele der jüngsten Zonen je Detektor (Outlier / Zero Print) gehalten werden. Ältere fallen heraus.</td></tr>
+  <tr><td>Linienbreite</td><td>Dicke der Linien in Pixeln.</td></tr>
+  <tr><td>Labels anzeigen</td><td>Blendet die Labels (Delta-Wert <code>Δ +500</code>, <code>ZP</code>) an den Zonen ein/aus.</td></tr>
   <tr><td>Linie durchgehend</td><td>Aus (Standard): Linie beginnt am Signal-Bar und läuft nach rechts. An: durchgehende Linie über die volle Chart-Breite.</td></tr>
-  <tr><td>Schriftgröße</td><td>Größe der Delta-Labels.</td></tr>
+  <tr><td>Schriftgröße</td><td>Größe der Labels.</td></tr>
 </table>
 
 <h3>Farben</h3>
 <table>
   <tr><th>Einstellung</th><th>Bedeutung</th></tr>
-  <tr><td>Farbe Kauf-Outlier</td><td>Linien-/Labelfarbe für positives Delta (aggressive Käufer).</td></tr>
-  <tr><td>Farbe Verkauf-Outlier</td><td>Linien-/Labelfarbe für negatives Delta (aggressive Verkäufer).</td></tr>
+  <tr><td>Farbe Kauf-Outlier</td><td>Linienfarbe für positives Delta (aggressive Käufer).</td></tr>
+  <tr><td>Farbe Verkauf-Outlier</td><td>Linienfarbe für negatives Delta (aggressive Verkäufer).</td></tr>
+  <tr><td>Farbe Zero Print</td><td>Linienfarbe für Zero-Print-Zonen.</td></tr>
 </table>
 
 <h2>Kalibrierung</h2>
