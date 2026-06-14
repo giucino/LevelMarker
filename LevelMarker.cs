@@ -59,14 +59,16 @@ namespace LevelMarker
         // ─────────────────────────────────────────────────────────────────
         //  STATE
         // ─────────────────────────────────────────────────────────────────
+        private enum ZoneKind { OutlierUp, OutlierDown, ZeroPrint }
+
         private readonly struct Zone
         {
             public readonly int Bar;
             public readonly decimal Price;
             public readonly string Label;
-            public readonly Color Color;
-            public Zone(int bar, decimal price, string label, Color color)
-            { Bar = bar; Price = price; Label = label; Color = color; }
+            public readonly ZoneKind Kind;
+            public Zone(int bar, decimal price, string label, ZoneKind kind)
+            { Bar = bar; Price = price; Label = label; Kind = kind; }
         }
 
         private readonly List<Zone> _outliers = new();
@@ -305,14 +307,14 @@ namespace LevelMarker
                 _ => GetPoc(c)
             };
             string label = $"Δ {c.Delta:+0;-0}";
-            AddZone(_outliers, new Zone(bar, price, label, up ? _colorUp : _colorDown), 0m);
+            AddZone(_outliers, new Zone(bar, price, label, up ? ZoneKind.OutlierUp : ZoneKind.OutlierDown), 0m);
         }
 
         private void AddZeroPrint(int bar, decimal price)
         {
             // benachbarte Zero-Print-Ticks zu EINER Zone zusammenfassen
             decimal tol = _tickEstimate > 0m ? _tickEstimate * 4m : 0m;
-            AddZone(_zeroPrints, new Zone(bar, price, "ZP", _colorZeroPrint), tol);
+            AddZone(_zeroPrints, new Zone(bar, price, "ZP", ZoneKind.ZeroPrint), tol);
         }
 
         // Fuegt eine Zone hinzu, sofern noch keine im Toleranzabstand existiert; begrenzt die Liste.
@@ -327,6 +329,16 @@ namespace LevelMarker
             while (list.Count > _maxLevels)
                 list.RemoveAt(0);
         }
+
+        // Farbe erst beim Zeichnen aus den aktuellen Einstellungen aufloesen
+        // (sonst wuerden Farbaenderungen erst nach Neuberechnung greifen).
+        private Color ColorOf(ZoneKind k) => k switch
+        {
+            ZoneKind.OutlierUp => _colorUp,
+            ZoneKind.OutlierDown => _colorDown,
+            ZoneKind.ZeroPrint => _colorZeroPrint,
+            _ => Color.White
+        };
 
         private static decimal GetPoc(IndicatorCandle c)
         {
@@ -393,7 +405,8 @@ namespace LevelMarker
                     catch { x1 = region.Left; }
                 }
 
-                context.DrawLine(new RenderPen(z.Color, _lineWidth), x1, y, x2, y);
+                var col = ColorOf(z.Kind);
+                context.DrawLine(new RenderPen(col, _lineWidth), x1, y, x2, y);
 
                 if (_showLabels && !string.IsNullOrEmpty(z.Label))
                 {
@@ -404,7 +417,7 @@ namespace LevelMarker
                         int xOrigin = cont.GetXByBar(b, false);
                         int labelX = Math.Min(Math.Max(xOrigin + 3, region.Left + 3),
                                               region.Right - sz.Width - 3);
-                        context.DrawString(z.Label, _font, z.Color, labelX, y - sz.Height - 1);
+                        context.DrawString(z.Label, _font, col, labelX, y - sz.Height - 1);
                     }
                     catch { /* Label diesmal weglassen */ }
                 }
