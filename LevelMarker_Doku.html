@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Level Marker (Delta-Outlier) — Dokumentation</title>
+<style>
+  :root { color-scheme: dark; }
+  body {
+    background: #14161c; color: #d7dce6;
+    font: 15px/1.6 "Segoe UI", Roboto, Arial, sans-serif;
+    max-width: 880px; margin: 0 auto; padding: 32px 24px 80px;
+  }
+  h1 { font-size: 26px; margin: 0 0 4px; color: #fff; }
+  h2 { font-size: 20px; margin: 34px 0 10px; color: #fff; border-bottom: 1px solid #2a2e38; padding-bottom: 6px; }
+  h3 { font-size: 16px; margin: 22px 0 6px; color: #eaeef6; }
+  .sub { color: #8b94a6; margin: 0 0 20px; }
+  code { background: #20242e; padding: 1px 6px; border-radius: 4px; font-family: Consolas, monospace; font-size: 13px; color: #e6c07b; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #2a2e38; vertical-align: top; }
+  th { color: #fff; background: #1b1e26; }
+  td:first-child { white-space: nowrap; color: #eaeef6; font-weight: 600; }
+  .up { color: #46cf64; font-weight: 600; }
+  .down { color: #e84c4c; font-weight: 600; }
+  .note { background: #1b2530; border-left: 3px solid #4a90d9; padding: 10px 14px; border-radius: 4px; margin: 14px 0; }
+  .warn { background: #2a2118; border-left: 3px solid #d9a14a; padding: 10px 14px; border-radius: 4px; margin: 14px 0; }
+  ul { margin: 6px 0 6px 0; padding-left: 22px; }
+  li { margin: 4px 0; }
+  .tag { display:inline-block; font-size:12px; background:#2a2e38; color:#9fb0c8; padding:1px 8px; border-radius:10px; }
+</style>
+</head>
+<body>
+
+<h1>Level Marker (Delta-Outlier)</h1>
+<p class="sub">Stufe 2 — markiert Bars mit außergewöhnlich hohem Delta und projiziert den Level. Rein informativ, kein Entry-Signal.</p>
+
+<h2>Was der Indikator macht</h2>
+<p>
+Der Indikator stellt bei jedem abgeschlossenen Bar eine Frage:
+<em>„Ist die Aggression in diesem Bar ungewöhnlich groß im Vergleich zu dem, was gerade normal ist?"</em>
+Wenn ja, zeichnet er an diesem Bar eine waagerechte Linie und projiziert sie nach rechts.
+</p>
+<ul>
+  <li><span class="up">Grün</span> = Kauf-Outlier (positives Delta — aggressive Käufer mit Marktorders)</li>
+  <li><span class="down">Rot</span> = Verkauf-Outlier (negatives Delta — aggressive Verkäufer mit Marktorders)</li>
+</ul>
+
+<h2>Wie ein Outlier erkannt wird</h2>
+<p>
+Aus den letzten <em>N</em> Bars (Lookback) werden <strong>Mittelwert</strong> und <strong>Standardabweichung (σ)</strong>
+des <code>|Delta|</code> berechnet. Ein Bar gilt als Outlier, wenn:
+</p>
+<p style="text-align:center; font-size:16px;">
+  <code>|Delta| ≥ Mittelwert + k · σ</code> &nbsp; UND &nbsp; <code>|Delta| ≥ Min.|Delta|</code>
+</p>
+<ul>
+  <li><strong>Mittelwert</strong> = das normale Aggressions-Niveau der jüngsten Bars.</li>
+  <li><strong>σ</strong> = wie stark die Bars typischerweise um diesen Mittelwert streuen.</li>
+  <li><strong>k</strong> = wie viele σ über dem Mittelwert die Grenze liegt (Regler „Outlier-Schwelle").</li>
+</ul>
+<div class="note">
+Der Clou: Die Schwelle ist <strong>relativ</strong>. Wird der Markt wilder, steigt σ und die Schwelle wandert
+automatisch mit nach oben. „Ungewöhnlich" heißt damit immer „ungewöhnlich <em>für gerade jetzt</em>" — nicht für
+einen festen Wert. Genau das unterscheidet ihn von einem Volumen-/Delta-Filter mit fester Zahl.
+</div>
+
+<h2>Die Level interpretieren</h2>
+
+<h3>Die Farbe ist NICHT „Support/Resistance"</h3>
+<p>
+Die Farbe sagt nur, <strong>wer beim Entstehen aggressiv war</strong> — nicht, ob das Level später Support oder
+Widerstand wird. Das hängt davon ab, was mit dieser Aggression passiert:
+</p>
+<ul>
+  <li><strong>Initiative war echt → Fortsetzung.</strong> Der Markt akzeptiert die Aggression und läuft weiter; beim Rücklauf wird der Bereich verteidigt (Support im Aufwärtstrend).</li>
+  <li><strong>Initiative wurde absorbiert → Umkehr/Trap.</strong> Großes Delta, aber der Preis geht nicht weiter → die aggressive Seite wurde geschluckt und sitzt fest.</li>
+</ul>
+
+<h3>Beispiel: ein roter Level, der Support gibt</h3>
+<p>
+Ein Verkaufs-Outlier (rot), der später als Support hält, ist ein <strong>starkes bullisches Tell</strong>:
+Die aggressiven Verkäufer dort wurden absorbiert. Kommt der Preis zurück, decken sich die getrappten Verkäufer ein
+<em>und</em> die absorbierenden Käufer verteidigen erneut → Support. Lies also das <strong>Verhalten</strong> am Level,
+nicht die Farbe.
+</p>
+
+<h3>Cluster-Dichte</h3>
+<p>
+Mehrere Linien eng beieinander = ein <strong>stärkeres Shelf</strong> als eine einzelne Linie. Mehr Initiative bedeutet
+mehr „Eigentümer", die diesen Bereich verteidigen.
+</p>
+
+<div class="warn">
+<strong>Wichtig — Level = das WO, nicht das OB.</strong> Der Marker sagt nur „hier war entschlossene Aktivität — pass auf,
+wenn der Preis zurückkommt." Ob es dann hält oder bricht, entscheidest du am <em>Live-Orderflow</em> beim Re-Test
+(Absorption? Rebid?). Der Indikator ersetzt diese Entscheidung bewusst nicht.
+</div>
+
+<h2>Empfohlener Chart & Timeframe</h2>
+<ul>
+  <li><strong>Tick-Charts (z.B. NQ 900-Tick) sind ideal:</strong> Jeder Bar hat ~gleich viele Trades → das Delta ist von Bar zu Bar vergleichbar. Das stabilisiert den σ-Test und macht den Filter <code>Min.|Delta|</code> meist überflüssig.</li>
+  <li><strong>Range-Bars</strong> funktionieren ebenfalls gut.</li>
+  <li><strong>Zeit-Charts</strong> gehen, sind aber schwächer: das Delta-Niveau schwankt mit der Tageszeit (Open-Spike vs. Mittagsflaute).</li>
+</ul>
+<p>Faustregel: Stelle die Bar-Größe so ein, dass die ~50 Lookback-Bars grob 1–2 Stunden aktiver Handelszeit abdecken.</p>
+
+<h2>Einstellungen</h2>
+
+<h3>Erkennung</h3>
+<table>
+  <tr><th>Einstellung</th><th>Bedeutung</th></tr>
+  <tr><td>Lookback (Bars)</td><td>Größe des rollierenden Vergleichsfensters. Klein = reagiert schnell, mehr Marker. Groß = träger, nur extreme Ausreißer.</td></tr>
+  <tr><td>Min. Bars für Statistik</td><td>Mindestanzahl Bars, bevor gewertet wird. Verhindert Fehlalarme direkt nach Chart-Start, wenn die Statistik noch instabil ist.</td></tr>
+  <tr><td>Outlier-Schwelle (Std-Abw.)</td><td>Der Faktor <code>k</code>. Hauptregler. Höher = strenger (nur die heftigsten Bars), niedriger = lockerer. Üblich 2,0–3,0.</td></tr>
+  <tr><td>Min. |Delta| (0 = aus)</td><td>Absoluter Mindestbetrag zusätzlich zur Statistik. Filtert Rausch in sehr ruhigen Phasen. 0 = aus. Auf Tick-Charts meist unnötig.</td></tr>
+  <tr><td>Level-Anker</td><td>Wo die Linie sitzt: <strong>vPOC</strong> (Preis mit meistem Volumen, empfohlen), <strong>Close</strong>, oder <strong>Extrem</strong> (High bei Kauf-, Low bei Verkauf-Outlier).</td></tr>
+  <tr><td>Max. Level (Anzahl)</td><td>Wie viele der jüngsten Level gleichzeitig gezeichnet werden. Ältere fallen heraus.</td></tr>
+</table>
+
+<h3>Darstellung</h3>
+<table>
+  <tr><th>Einstellung</th><th>Bedeutung</th></tr>
+  <tr><td>Linienbreite</td><td>Dicke der Level-Linie in Pixeln.</td></tr>
+  <tr><td>Labels anzeigen</td><td>Blendet den Delta-Wert (z.B. <code>Δ +500</code>) am Level ein/aus.</td></tr>
+  <tr><td>Linie durchgehend</td><td>Aus (Standard): Linie beginnt am Signal-Bar und läuft nach rechts. An: durchgehende Linie über die volle Chart-Breite.</td></tr>
+  <tr><td>Schriftgröße</td><td>Größe der Delta-Labels.</td></tr>
+</table>
+
+<h3>Farben</h3>
+<table>
+  <tr><th>Einstellung</th><th>Bedeutung</th></tr>
+  <tr><td>Farbe Kauf-Outlier</td><td>Linien-/Labelfarbe für positives Delta (aggressive Käufer).</td></tr>
+  <tr><td>Farbe Verkauf-Outlier</td><td>Linien-/Labelfarbe für negatives Delta (aggressive Verkäufer).</td></tr>
+</table>
+
+<h2>Kalibrierung</h2>
+<ol>
+  <li>Mit <code>Min.|Delta| = 0</code> und <code>k = 2,0</code> (bzw. 3,0 auf Tick-Charts) im Replay laufen lassen.</li>
+  <li>Sitzen die Marker an Stellen, die du selbst als „da kam was durch" markiert hättest?</li>
+  <li>Zu viele/zu wenige Marker → an <code>k</code> drehen.</li>
+  <li>Müll-Marker in ruhigen Phasen → <code>Min.|Delta|</code> anheben.</li>
+</ol>
+
+<p class="sub" style="margin-top:40px;">
+<span class="tag">Eigenentwicklung</span> Teil eines mehrstufigen ATAS-Orderflow-Projekts (Bias-Dashboard → Level-Marker → Confluence-Score).
+</p>
+
+</body>
+</html>
