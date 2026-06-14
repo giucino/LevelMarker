@@ -413,10 +413,20 @@ namespace LevelMarker
                     try
                     {
                         var sz = context.MeasureString(z.Label, _font);
-                        int b = Math.Min(Math.Max(z.Bar, 0), lastBar);
-                        int xOrigin = cont.GetXByBar(b, false);
-                        int labelX = Math.Min(Math.Max(xOrigin + 3, region.Left + 3),
+                        int labelX;
+                        if (z.Kind == ZoneKind.ZeroPrint)
+                        {
+                            // Zero-Print-Label rechts an der Preisachse.
+                            labelX = region.Right - sz.Width - 3;
+                        }
+                        else
+                        {
+                            // Delta-Outlier-Label am Signal-Bar (der Δ-Wert gehoert zum Bar).
+                            int b = Math.Min(Math.Max(z.Bar, 0), lastBar);
+                            int xOrigin = cont.GetXByBar(b, false);
+                            labelX = Math.Min(Math.Max(xOrigin + 3, region.Left + 3),
                                               region.Right - sz.Width - 3);
+                        }
                         context.DrawString(z.Label, _font, col, labelX, y - sz.Height - 1);
                     }
                     catch { /* Label diesmal weglassen */ }
