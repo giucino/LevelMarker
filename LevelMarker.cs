@@ -20,7 +20,7 @@ namespace LevelMarker
     }
 
     [DisplayName("Level Marker (Delta-Outlier)")]
-    [HelpLink("file:///C:/ATAS_Indicators/LevelMarker/LevelMarker_Doku.html")]
+    [HelpLink("https://giucino.github.io/LevelMarker/LevelMarker_Doku.html")]
     [Description("Stufe 2 — markiert Range-Bars mit aussergewoehnlich hohem |Delta| " +
                  "(statistischer Ausreisser ggue. einem rollierenden Fenster) und projiziert " +
                  "den zugehoerigen Level nach rechts. Rein informativ, kein Entry-Signal. " +
